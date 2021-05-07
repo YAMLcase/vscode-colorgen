@@ -25,21 +25,14 @@ h = random.SystemRandom().random()
 def lighten(h, l, s, factor):
     l = l + factor
     r, g, b = hls2rgb(h, l, s)
-    # r, g, b = hls2rgb()
     return rgb2hex(int(r * 255), int(g * 255), int(b * 255))
+
 
 def darken(h, l, s, factor):
     return lighten(h, l, s, factor * -1)
 
-def merge(source, destination):
-    """
-    run me with nosetests --with-doctest file.py
 
-    >>> a = { 'first' : { 'all_rows' : { 'pass' : 'dog', 'number' : '1' } } }
-    >>> b = { 'first' : { 'all_rows' : { 'fail' : 'cat', 'number' : '5' } } }
-    >>> merge(b, a) == { 'first' : { 'all_rows' : { 'pass' : 'dog', 'fail' : 'cat', 'number' : '5' } } }
-    True
-    """
+def merge(source, destination):
     for key, value in source.items():
         if isinstance(value, dict):
             # get node or create one
@@ -47,7 +40,6 @@ def merge(source, destination):
             merge(value, node)
         else:
             destination[key] = value
-
     return destination
 
 # initial color mid-dark color:
@@ -55,6 +47,7 @@ mid = lighten(h, l, s, 0.0)
 lighter = lighten(h, l, s, lighten_factor)
 darker = darken(h, l, s, darken_factor)
 
+# Generate the settings.json config
 workbench = {}
 workbench["workbench.colorCustomizations"] = {}
 workbench["workbench.colorCustomizations"]["tab.inactiveBackground"] = lighter
@@ -64,8 +57,10 @@ workbench["workbench.colorCustomizations"]["editorGroupHeader.tabsBackground"] =
 workbench["workbench.colorCustomizations"]["sideBar.background"] = darker
 workbench["workbench.colorCustomizations"]["statusBar.background"] = "#252526"
 
+# create .vscode if not exists
 os.makedirs(os.path.dirname(config_file), exist_ok=True)
 
+# super lazy way to get open file and just continue if it doesn't exist
 config = {}
 try:
     f = open(config_file,"r")
@@ -74,9 +69,10 @@ try:
 except:
     pass
 
-
+# Deep merge color config into existing settings.json config
 merge(workbench, config)
 
+# write the file back out!
 f = open(config_file,"w")
 f.write(json.dumps(workbench, indent=2))
 f.close()
